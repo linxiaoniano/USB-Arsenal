@@ -58,7 +58,7 @@ class IdentityTest {
     @Test
     fun inForce() {
         val p = parseProfile("""{"profile":"","copy":false,"missing":"/p/gone.conf","keys":{"product":"USB Arsenal","serial":""}}""")
-        assertEquals("Built-in", profileName(p))
+        assertEquals("内置", profileName(p))
         assertEquals("/p/gone.conf", p["missing"])
         // A derived value is empty in the JSON and left out
         assertTrue("serial" !in p)
@@ -77,7 +77,7 @@ class IdentityTest {
 
     @Test
     fun names() {
-        assertEquals("Built-in", profileName(mapOf("profile" to "")))
+        assertEquals("内置", profileName(mapOf("profile" to "")))
         assertEquals("pixel 8", profileName(mapOf("profile" to "/storage/emulated/0/USB-Arsenal/Profiles/pixel 8.conf")))
     }
 

@@ -50,12 +50,17 @@ object Lcd {
     val lunCell = 40.dp
 }
 
-val Jersey10 = FontFamily(Font(R.font.jersey10_regular))
+// Ark Pixel carries the CJK glyphs the three Latin faces have none of, so Chinese stays on the
+// pixel grid instead of falling back to the system face; from Android 10 the fallback is per glyph
+private val Cjk = Font(R.font.ark_pixel_12px)
+
+val Jersey10 = FontFamily(Font(R.font.jersey10_regular), Cjk)
 val Silkscreen = FontFamily(
     Font(R.font.silkscreen_regular, FontWeight.Normal),
     Font(R.font.silkscreen_bold, FontWeight.Bold),
+    Cjk,
 )
-val Vt323 = FontFamily(Font(R.font.vt323_regular))
+val Vt323 = FontFamily(Font(R.font.vt323_regular), Cjk)
 
 // Compose has no text-transform: Silkscreen text is uppercased by the component that draws it, VT323 never is
 object LcdType {
@@ -76,17 +81,17 @@ object LcdType {
  * is dark glass with lit pixels, and the system bars' icons follow it.
  */
 enum class Theme(val label: String, val ground: Color, val ink: Color) {
-    Amber("Amber", Color(0xFFFFA62E), Color(0xFF1C1005)),
-    Orange("Orange", Color(0xFFFF8200), Color(0xFF000000)),
-    Pea("Pea", Color(0xFF9BBC0F), Color(0xFF0F380F)),
-    Pocket("Pocket", Color(0xFFC4CFA1), Color(0xFF2A2B26)),
-    Nokia("Nokia", Color(0xFFC7F0D8), Color(0xFF43523D)),
-    Paper("Paper", Color(0xFFE9E6DC), Color(0xFF1A1A1A)),
-    Night("Night", Color(0xFF1C1005), Color(0xFFFFA62E)),
-    Phosphor("Phosphor", Color(0xFF0B1A0E), Color(0xFF3DF07A)),
-    Matrix("Matrix", Color(0xFF000000), Color(0xFF00FF41)),
-    Vfd("Vfd", Color(0xFF0A1412), Color(0xFF5EFFD2)),
-    Plasma("Plasma", Color(0xFF1A0300), Color(0xFFFF6A2A)),
+    Amber("琥珀", Color(0xFFFFA62E), Color(0xFF1C1005)),
+    Orange("橙", Color(0xFFFF8200), Color(0xFF000000)),
+    Pea("豌豆", Color(0xFF9BBC0F), Color(0xFF0F380F)),
+    Pocket("口袋", Color(0xFFC4CFA1), Color(0xFF2A2B26)),
+    Nokia("诺基亚", Color(0xFFC7F0D8), Color(0xFF43523D)),
+    Paper("纸张", Color(0xFFE9E6DC), Color(0xFF1A1A1A)),
+    Night("夜色", Color(0xFF1C1005), Color(0xFFFFA62E)),
+    Phosphor("磷光", Color(0xFF0B1A0E), Color(0xFF3DF07A)),
+    Matrix("矩阵", Color(0xFF000000), Color(0xFF00FF41)),
+    Vfd("荧光管", Color(0xFF0A1412), Color(0xFF5EFFD2)),
+    Plasma("等离子", Color(0xFF1A0300), Color(0xFFFF6A2A)),
     ;
 
     val colors get() = LcdColors(ground, ink)

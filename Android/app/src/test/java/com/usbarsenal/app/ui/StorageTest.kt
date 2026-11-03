@@ -23,7 +23,7 @@ class StorageTest {
         // rw needs none: the segment and the drive's tag already say it
         assertNull(storageWarning("rw", 1L shl 30))
         // Over the CD-ROM limit only matters in cdrom mode; auto picks dvd for it
-        assertEquals("over 2.36G: the host reads a truncated disc", storageWarning("cdrom", 5L shl 30))
+        assertEquals("超过 2.36G：主机读到截断盘", storageWarning("cdrom", 5L shl 30))
         assertNull(storageWarning("cdrom", 1L shl 30))
         assertNull(storageWarning("auto", 5L shl 30))
     }

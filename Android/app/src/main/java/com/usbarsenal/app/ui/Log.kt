@@ -37,8 +37,8 @@ fun LogScreen(back: () -> Unit) {
     Screen(
         footer = {
             KeyRow {
-                Key("Clear", Modifier.weight(1f)) { scope.launch { Gadget.clearLog() } }
-                Key("Copy logs", Modifier.weight(1f).focusRequester(focusOn()), primary = true) {
+                Key("清除", Modifier.weight(1f)) { scope.launch { Gadget.clearLog() } }
+                Key("复制日志", Modifier.weight(1f).focusRequester(focusOn()), primary = true) {
                     context.getSystemService(ClipboardManager::class.java)
                         .setPrimaryClip(ClipData.newPlainText("usb-arsenal log", Gadget.log.joinToString("\n")))
                 }
@@ -46,7 +46,7 @@ fun LogScreen(back: () -> Unit) {
         },
     ) {
         Top { BackKey() }
-        Title("Log")
+        Title("日志")
         // A short window scrolls the screen to it, and it keeps a dozen lines
         Terminal(lines, Modifier.fill(min = 240.dp))
     }

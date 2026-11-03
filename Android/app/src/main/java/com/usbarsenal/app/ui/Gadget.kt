@@ -60,19 +60,19 @@ fun says(args: List<String>): String {
     val verb = args.getOrNull(1)
     val name = if (what == "hid") "HID" else what
     return when {
-        what == "stop" -> "stopping everything"
-        what == "identity" && verb == "unset" -> "back to built-in identity"
-        what == "identity" -> "switching identity"
-        verb == "eject" -> "ejecting a drive"
-        verb == "start" -> "starting $name"
-        verb == "apply" -> "applying $name"
-        verb == "stop" -> "stopping $name"
+        what == "stop" -> "正在全部停止"
+        what == "identity" && verb == "unset" -> "恢复内置身份"
+        what == "identity" -> "正在切换身份"
+        verb == "eject" -> "正在弹出驱动器"
+        verb == "start" -> "正在启动 $name"
+        verb == "apply" -> "正在应用 $name"
+        verb == "stop" -> "正在停止 $name"
         else -> args.joinToString(" ")
     }
 }
 
 // The functions Home lists, in its order; [prefix] is their keys' in the setup
-enum class Fn(val label: String, val prefix: String) { STORAGE("Storage", "storage_"), TETHER("Tether", "tether_"), HID("HID", "hid_") }
+enum class Fn(val label: String, val prefix: String) { STORAGE("存储", "storage_"), TETHER("共享网络", "tether_"), HID("键鼠", "hid_") }
 
 // What a log on screen keeps; the file keeps the rest, and the cache the newest few hundred
 const val LOG_KEEP = 2_000
@@ -204,7 +204,7 @@ object Gadget {
             batch.forEach { (k, v) -> if (edits[k] == v) edits.remove(k) }
             Cache.edits = edits
         } else {
-            fault = Fault(null, r.err.lastOrNull()?.let(::plain) ?: "[-] setup set failed (exit ${r.code})")
+            fault = Fault(null, r.err.lastOrNull()?.let(::plain) ?: "[-] 参数设置失败（退出码 ${r.code}）")
             if (r.err.isEmpty()) note(fault!!.message)
             fails++
             // Refused, they are dropped: the setup stays what the backend holds, and a batch it
@@ -284,7 +284,7 @@ object Gadget {
     fun run(fn: Fn?, vararg args: String, quiet: Boolean = false, onDone: (Boolean) -> Unit = {}): Boolean {
         if (busy != null) {
             // Refused, as a tap that lands in the beat before the keys are held: say so
-            fault = Fault(fn, "[-] Another command is running", identity = args.firstOrNull() == "identity")
+            fault = Fault(fn, "[-] 另一条命令正在运行", identity = args.firstOrNull() == "identity")
             note(fault!!.message)
             fails++
             return false
@@ -301,8 +301,8 @@ object Gadget {
             if (!r.ok) {
                 // The backend logged what it said itself; what it could not say is noted here
                 val why = when {
-                    r.timedOut -> "[-] Timed out (${CHANGE_TIMEOUT_MS / 1000}s)".also(::note)
-                    else -> r.err.lastOrNull()?.let(::plain) ?: "[-] Failed (exit ${r.code})".also(::note)
+                    r.timedOut -> "[-] 超时（${CHANGE_TIMEOUT_MS / 1000}s）".also(::note)
+                    else -> r.err.lastOrNull()?.let(::plain) ?: "[-] 失败（退出码 ${r.code}）".also(::note)
                 }
                 fault = Fault(fn, why, identity = args.firstOrNull() == "identity")
                 fails++
@@ -343,9 +343,9 @@ fun canApply(fn: Fn) = Gadget.busy == null && !Gadget.backend.holds() && (starta
 
 // What applying does, for the sheet that asks: the consequence on the host
 private fun applyNote(fn: Fn) = when (fn) {
-    Fn.STORAGE -> "The host still sees the drives as they were. Apply loads your changes, and may reconnect every drive; Discard puts your picks back."
-    Fn.TETHER -> "Tether still runs as it was. Apply reconnects the gadget, every drive and function with it, for a moment; Discard puts your settings back."
-    Fn.HID -> "HID still runs as it was. Apply reconnects the gadget, every drive and function with it, for a moment."
+    Fn.STORAGE -> "主机仍看到旧驱动器。应用会加载更改并重连各驱动器，放弃则还原选择。"
+    Fn.TETHER -> "共享网络仍在按原样运行。应用会短暂重连设备与各驱动器，放弃则还原设置。"
+    Fn.HID -> "键鼠仍在按原样运行。应用会短暂重连设备与各功能。"
 }
 
 /*
@@ -371,19 +371,19 @@ fun NotAppliedSheet(pending: Boolean, note: String, canApply: Boolean, onDiscard
         onDismiss = { asking = false },
         entry = discardKey,
         footer = {
-            Key("Discard", Modifier.weight(1f).focusRequester(discardKey)) {
+            Key("放弃", Modifier.weight(1f).focusRequester(discardKey)) {
                 asking = false
                 onDiscard()
                 back()
             }
-            Key("Apply", Modifier.weight(1f), primary = true, enabled = canApply) {
+            Key("应用", Modifier.weight(1f), primary = true, enabled = canApply) {
                 asking = false
                 onApply()
                 back()
             }
         },
     ) {
-        Title("Not applied")
+        Title("未应用")
         Note(note)
     }
 }
@@ -421,41 +421,41 @@ fun GadgetStatus?.isOn(fn: Fn) = this != null && when (fn) {
 fun rowLines(fn: Fn, status: GadgetStatus?, caps: Capabilities?, busy: Busy?): Pair<String, String> {
     if (!caps.has(fn)) {
         return when (fn) {
-            Fn.STORAGE -> "no mass storage in this kernel" to "CONFIG_USB_CONFIGFS_MASS_STORAGE"
-            Fn.TETHER -> "no ncm or rndis in this kernel" to "CONFIG_USB_CONFIGFS_NCM"
-            Fn.HID -> "no hid in this kernel" to "CONFIG_USB_CONFIGFS_F_HID"
+            Fn.STORAGE -> "内核无大容量存储" to "CONFIG_USB_CONFIGFS_MASS_STORAGE"
+            Fn.TETHER -> "内核无 ncm 或 rndis" to "CONFIG_USB_CONFIGFS_NCM"
+            Fn.HID -> "内核无 hid" to "CONFIG_USB_CONFIGFS_F_HID"
         }
     }
-    if (busy != null && busy.fn == fn) return (if (busy.stopping) "stopping" else "starting") to busy.typed
+    if (busy != null && busy.fn == fn) return (if (busy.stopping) "停止中" else "启动中") to busy.typed
     val on = status.isOn(fn)
     return when (fn) {
         Fn.STORAGE -> if (on) {
             val luns = status!!.storage.filter { it.file.isNotEmpty() }.map { "LUN${it.lun} ${it.file.substringAfterLast('/')} · ${it.mode}" }
-            if (luns.isEmpty()) "${status.storage.size} empty drive${if (status.storage.size == 1) "" else "s"}" to "no medium" else luns[0] to luns.drop(1).joinToString("  ")
+            if (luns.isEmpty()) "${status.storage.size} 个空驱动器" to "无介质" else luns[0] to luns.drop(1).joinToString("  ")
         } else {
-            "ISOs and disk images" to "as drives for the host"
+            "ISO 与磁盘镜像" to "作为主机的驱动器"
         }
         Fn.TETHER -> {
             val t = status?.tether
             if (t == null) {
-                "this phone's internet" to "for the host, over USB"
+                "本机网络" to "经 USB 共享给主机"
             } else {
                 val ip = t.address.substringBefore('/')
                 val line1 = hostOf(t.address)?.let { "${t.function} $ip → .${it.substringAfterLast('.')}" } ?: "${t.function} ${t.iface}"
                 val line2 = when {
-                    t.gateway -> "gateway ${t.gatewayContainer}".trimEnd()
-                    !t.running -> "no network side"
-                    t.upstream.isNotEmpty() -> "via ${t.upstream}"
-                    else -> "no upstream yet"
+                    t.gateway -> "网关 ${t.gatewayContainer}".trimEnd()
+                    !t.running -> "无网络侧"
+                    t.upstream.isNotEmpty() -> "经 ${t.upstream}"
+                    else -> "尚无上游"
                 }
                 line1 to line2
             }
         }
         Fn.HID -> if (on) {
             val node = { f: String -> status!!.hid.firstOrNull { it.function == f }?.node.orEmpty() }
-            "keyboard ${node("keyboard")}" to "mouse ${node("mouse")}"
+            "键盘 ${node("keyboard")}" to "鼠标 ${node("mouse")}"
         } else {
-            "a keyboard and a mouse" to "for the host"
+            "键盘与鼠标" to "给主机"
         }
     }
 }
@@ -597,7 +597,7 @@ object IdentitySetup {
 fun activeProfile(profile: Map<String, String>): String? = profile["profile"]?.ifEmpty { null }
 
 // The name Settings shows for it: the file's, without .conf
-fun profileName(profile: Map<String, String>) = activeProfile(profile)?.substringAfterLast('/')?.removeSuffix(".conf") ?: "Built-in"
+fun profileName(profile: Map<String, String>) = activeProfile(profile)?.substringAfterLast('/')?.removeSuffix(".conf") ?: "内置"
 
 // A pick waits only while the host sees the gadget: otherwise it is set at once, with no replug
 fun identityPending(bound: Boolean, chosen: String?, active: String?, edited: Boolean) = bound && (chosen != active || edited)

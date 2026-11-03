@@ -77,7 +77,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 // The three speeds: no flag, --fast (one key per report, no gap), --ultra (up to six keys a report)
-private val SPEEDS = listOf("Normal", "Fast", "Ultra")
+private val SPEEDS = listOf("常速", "快速", "极速")
 private val CODE = KeyboardOptions(capitalization = KeyboardCapitalization.None, autoCorrectEnabled = false, keyboardType = KeyboardType.Ascii)
 
 /*
@@ -141,7 +141,7 @@ fun QuackyScreen(back: () -> Unit) {
 
     fun open(f: ImageFile) {
         scope.launch {
-            val t = readScript(f.path) ?: run { fault = "[-] Cannot read ${f.name}"; return@launch }
+            val t = readScript(f.path) ?: run { fault = "[-] 无法读取 ${f.name}"; return@launch }
             name = f.name; text = t; fault = null; picking = false
             QuackySetup.open(f.name, t)
         }
@@ -181,7 +181,7 @@ fun QuackyScreen(back: () -> Unit) {
                 // character by character; flushed once a frame so Ultra's thousands a second never
                 // flood it
                 out = listOf("# ${c.echo}", "")
-                val s = runQuacky(c.cmd) ?: run { out = out + "[-] Could not start quacky"; return@launch }
+                val s = runQuacky(c.cmd) ?: run { out = out + "[-] 无法启动 quacky"; return@launch }
                 val buf = StringBuilder()
                 val drain = launch {
                     while (true) {
@@ -214,30 +214,30 @@ fun QuackyScreen(back: () -> Unit) {
             fault?.let { Fault(it, onLog = null) }
             if (tab == 0) {
                 KeyRow {
-                    Key("Save as", Modifier.weight(1f)) { naming = 2 }
-                    Key("Save", Modifier.weight(1f).focusRequester(focusOn(tab)), primary = true) { save() }
+                    Key("另存为", Modifier.weight(1f)) { naming = 2 }
+                    Key("保存", Modifier.weight(1f).focusRequester(focusOn(tab)), primary = true) { save() }
                 }
             } else {
-                if (node == null) Note("Enable HID on Home to type for real")
+                if (node == null) Note("在主页开启 HID 才能输入")
                 KeyRow {
                     // Focus the Dry run key: it is always enabled (even with HID off), unlike Run
-                    Key("Dry run", Modifier.weight(1f).focusRequester(focusOn(tab)), enabled = !running) { run(dry = true) }
+                    Key("试运行", Modifier.weight(1f).focusRequester(focusOn(tab)), enabled = !running) { run(dry = true) }
                     if (running) {
-                        Key("Stop", Modifier.weight(1f), primary = true) { job?.cancel() }
+                        Key("停止", Modifier.weight(1f), primary = true) { job?.cancel() }
                     } else {
-                        Key("Run", Modifier.weight(1f), primary = true, enabled = node != null) { run(dry = false) }
+                        Key("运行", Modifier.weight(1f), primary = true, enabled = node != null) { run(dry = false) }
                     }
                 }
             }
         }) {
             Top { BackKey() }
             Title("Quacky")
-            Segs(listOf("Edit", "Run"), tab, { tab = it })
+            Segs(listOf("编辑", "运行"), tab, { tab = it })
             if (tab == 0) {
-                PickRow("File", name.ifEmpty { "new script" } + if (dirty) " *" else "") { picking = true }
+                PickRow("文件", name.ifEmpty { "新脚本" } + if (dirty) " *" else "") { picking = true }
                 CodeEditor(text, { text = it }, Modifier.fill(min = 200.dp))
             } else {
-                PickRow("Options", "${SPEEDS[QuackySetup.mode].lowercase()} · ${QuackySetup.effectivePace} ms") { options = true }
+                PickRow("选项", "${SPEEDS[QuackySetup.mode].lowercase()} · ${QuackySetup.effectivePace} ms") { options = true }
                 Terminal(out, Modifier.fill(min = 200.dp))
             }
         }
@@ -246,7 +246,7 @@ fun QuackyScreen(back: () -> Unit) {
         // screens use. Save runs on the app scope so the Back that follows never cancels the write
         NotAppliedSheet(
             pending = dirty && name.isNotEmpty(),
-            note = "Unsaved edits. Apply saves them; Discard drops them.",
+            note = "有未保存的修改",
             canApply = true,
             onDiscard = { text = QuackySetup.text },
             onApply = { Gadget.scope.launch { write() } },
@@ -258,16 +258,16 @@ fun QuackyScreen(back: () -> Unit) {
             picking,
             { picking = false },
             footer = {
-                Key("Cancel", Modifier.weight(1f)) { picking = false }
-                Key("New", Modifier.weight(1f), primary = true) {
+                Key("取消", Modifier.weight(1f)) { picking = false }
+                Key("新建", Modifier.weight(1f), primary = true) {
                     picking = false
                     naming = 1
                 }
             },
         ) {
-            Title("Scripts")
+            Title("脚本")
             Text(dir, LcdType.data)
-            if (files.isEmpty()) Note("No scripts yet")
+            if (files.isEmpty()) Note("暂无脚本")
             files.forEach { f ->
                 FileRow(f.name, sizeText(f.bytes), null, f.name == name, onPick = {
                     when {
@@ -293,26 +293,26 @@ fun QuackyScreen(back: () -> Unit) {
             discard != null,
             { discard = null },
             footer = {
-                Key("Cancel", Modifier.weight(1f)) { discard = null }
-                Key("Discard", Modifier.weight(1f), primary = true) {
+                Key("取消", Modifier.weight(1f)) { discard = null }
+                Key("放弃", Modifier.weight(1f), primary = true) {
                     discard?.let { open(it) }
                     discard = null
                 }
             },
         ) {
-            Title("Discard?")
-            Note("$name has unsaved edits")
+            Title("放弃？")
+            Note("$name 有未保存的修改")
         }
 
         // Speed and pace for the run. Fast and Ultra drop the pace to 0, still editable
         Sheet(
             options,
             { options = false },
-            footer = { Key("Done", Modifier.weight(1f), primary = true) { options = false } },
+            footer = { Key("完成", Modifier.weight(1f), primary = true) { options = false } },
         ) {
-            Title("Options")
+            Title("选项")
             Segs(SPEEDS, QuackySetup.mode, { QuackySetup.mode(it) })
-            Field("Pace") {
+            Field("节奏") {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Input(
                         QuackySetup.pace,
@@ -324,7 +324,7 @@ fun QuackyScreen(back: () -> Unit) {
                     Text("ms", LcdType.data)
                 }
             }
-            Kv("Target") { Text(node ?: "no keyboard", LcdType.data) }
+            Kv("目标") { Text(node ?: "无键盘", LcdType.data) }
         }
     }
 }
@@ -438,18 +438,18 @@ private fun NamingSheet(mode: Int, dir: String, preset: String, existing: List<S
         onDismiss = onClose,
         entry = cancel,
         footer = {
-            Key("Cancel", Modifier.weight(1f).focusRequester(cancel), onClick = onClose)
-            Key(if (mode == 1) "Create" else "Save", Modifier.weight(1f), primary = true, enabled = !badName && !taken) { onName(file) }
+            Key("取消", Modifier.weight(1f).focusRequester(cancel), onClick = onClose)
+            Key(if (mode == 1) "创建" else "保存", Modifier.weight(1f), primary = true, enabled = !badName && !taken) { onName(file) }
         },
     ) {
-        Title(if (mode == 1) "New" else "Save as")
-        Field("Name") {
+        Title(if (mode == 1) "新建" else "另存为")
+        Field("名称") {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Input(raw, { raw = it.filter { c -> c != '/' && !c.isISOControl() }.take(255) }, Modifier.weight(1f), placeholder = "archinstall")
                 Text(".qk", LcdType.data)
             }
         }
-        if (taken) Warn("name taken")
+        if (taken) Warn("名称已存在")
         Text(dir, LcdType.data)
     }
 }

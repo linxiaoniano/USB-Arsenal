@@ -330,6 +330,9 @@ Three pixel faces, each with one job. Load them from Google Fonts in one request
 | `data` | VT323 | 22px | Paths, filenames, addresses, report bytes, log lines. Keeps its case |
 
 - Four sizes exist: 104, 72, 22 and 16. Nothing else.
+- None of the three faces has Chinese glyphs. Ark Pixel 12px (SIL OFL 1.1) is the fallback,
+  per glyph from Android 10; the Latin faces stay first, so only the CJK characters come
+  from it.
 - Silkscreen is uppercase by `text-transform`. VT323 opts out, because `/dev/hidg1` and
   `Win11_24H2_x64.iso` are case-sensitive facts.
 - Font smoothing is off (`-webkit-font-smoothing: none`). Pixel faces must stay pixel-sharp.

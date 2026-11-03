@@ -55,27 +55,27 @@ private fun hexInput(s: String) = s.filter { it in '0'..'9' || it in 'a'..'f' ||
 fun profileProblems(name: String, product: String, maker: String, vid: String, pid: String, taken: Boolean, serial: String = ""): Map<String, String> {
     val out = mutableMapOf<String, String>()
     val n = name.trim()
-    if (n.isEmpty()) out["name"] = "a name for the file"
-    else if (!Regex("[A-Za-z0-9][A-Za-z0-9 ._-]{0,63}").matches(n)) out["name"] = "letters, digits, space, . _ - only"
-    else if (taken) out["name"] = "name taken"
+    if (n.isEmpty()) out["name"] = "需要文件名"
+    else if (!Regex("[A-Za-z0-9][A-Za-z0-9 ._-]{0,63}").matches(n)) out["name"] = "仅限字母数字和 . _ -"
+    else if (taken) out["name"] = "名称已占用"
     // As config.c's strings: printable ASCII only (USB strings are), 126 at most, and no '#',
     // which it reads as a comment after a space
     fun text(key: String, v: String, required: Boolean = true) {
         if (v.isBlank()) {
-            if (required) out[key] = "cannot be empty"
+            if (required) out[key] = "不能为空"
         } else if (v.any { it !in ' '..'~' }) {
-            out[key] = "plain ASCII letters, digits and symbols only"
+            out[key] = "仅限 ASCII 字母、数字和符号"
         } else if ('#' in v) {
-            out[key] = "no #"
+            out[key] = "不能含 #"
         } else if (v.length > 126) {
-            out[key] = "126 characters at most"
+            out[key] = "最多 126 字符"
         }
     }
     text("product", product)
     text("maker", maker)
     // Empty is allowed: the phone's own serial
     text("serial", serial, required = false)
-    if (!HEX4.matches(vid) || !HEX4.matches(pid)) out["ids"] = "four hex digits each"
+    if (!HEX4.matches(vid) || !HEX4.matches(pid)) out["ids"] = "各 4 位十六进制"
     return out
 }
 
@@ -145,7 +145,7 @@ fun IdentityScreen(back: () -> Unit, openLog: () -> Unit) {
     fun pick(path: String?) {
         // Nothing is set before the gadget and the profile in force are known: say so
         if (!known) {
-            Gadget.fault = Fault(null, "[-] The profile in force is not read yet", identity = true)
+            Gadget.fault = Fault(null, "[-] 当前配置档尚未读取", identity = true)
             return
         }
         IdentitySetup.chosen = path
@@ -162,19 +162,19 @@ fun IdentityScreen(back: () -> Unit, openLog: () -> Unit) {
             footer = {
                 KeyRow {
                     // Built-in is no file: there is nothing to edit
-                    Key("Edit", Modifier.weight(1f).opener("identity/edit"), enabled = shown != null && chosen != null) { sheet = chosen }
-                    Key("Create", Modifier.weight(1f).focusRequester(focusOn()).opener("identity/create"), primary = true) { sheet = "" }
+                    Key("编辑", Modifier.weight(1f).opener("identity/edit"), enabled = shown != null && chosen != null) { sheet = chosen }
+                    Key("新建", Modifier.weight(1f).focusRequester(focusOn()).opener("identity/create"), primary = true) { sheet = "" }
                 }
             },
         ) {
             Top { BackKey() }
-            Title("Identity")
+            Title("身份")
             ProfilePanel(shown, live = bound, Modifier.shake(shake))
             // Under the panel, which is what a set acts on
             fault?.let { Fault(it.message, onLog = openLog, modifier = Modifier.opener("identity/fault")) }
-            if (missing.isNotEmpty() && fault == null) Warn("$missing is gone: the host gets Built-in")
+            if (missing.isNotEmpty() && fault == null) Warn("$missing 已丢失，主机将用内置配置")
             Column(Modifier.bleed(10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                FilesHeader(PROFILES, label = "Profiles")
+                FilesHeader(PROFILES, label = "配置档")
                 FileRow(BUILT_IN.name, "${BUILT_IN.vid}:${BUILT_IN.pid}", null, selected = chosen == null, onPick = { pick(null) })
                 profiles.orEmpty().forEach { p ->
                     FileRow(p.name, "${p.vid}:${p.pid}", null, selected = p.path == chosen, onPick = { pick(p.path) })
@@ -183,7 +183,7 @@ fun IdentityScreen(back: () -> Unit, openLog: () -> Unit) {
         }
         NotAppliedSheet(
             identityPending(bound, chosen, active, IdentitySetup.edited),
-            "The host still sees the old identity. Apply reconnects the gadget once; Discard keeps it.",
+            "主机仍用旧身份。应用会重连一次，放弃则不变。",
             canApply = Gadget.busy == null && !Gadget.backend.holds(),
             onDiscard = {
                 IdentitySetup.chosen = active
@@ -238,7 +238,7 @@ private fun ProfilePanel(p: Profile?, live: Boolean, modifier: Modifier) {
                     Marquee(p.product, LcdType.data, Modifier.fillMaxWidth())
                     Marquee(p.maker, LcdType.data, Modifier.fillMaxWidth())
                     Text("${p.vid}:${p.pid} · ${p.power} mA", LcdType.data)
-                    Marquee(p.serial.ifEmpty { "serial from this phone" }, LcdType.data, Modifier.fillMaxWidth())
+                    Marquee(p.serial.ifEmpty { "本机序列号" }, LcdType.data, Modifier.fillMaxWidth())
                 }
             }
         }
@@ -311,21 +311,21 @@ private fun ProfileSheet(open: Boolean, profile: Profile?, dir: String, names: L
         onDismiss = { if (!writing) onDismiss() },
         entry = cancelKey,
         footer = {
-            Key("Cancel", Modifier.weight(1f).focusRequester(cancelKey), enabled = !writing, onClick = onDismiss)
-            Key(if (editing == null) "Create" else "Save", Modifier.weight(1f), primary = true, enabled = problems.isEmpty() && !writing && (editing != null || names != null)) { save() }
+            Key("取消", Modifier.weight(1f).focusRequester(cancelKey), enabled = !writing, onClick = onDismiss)
+            Key(if (editing == null) "新建" else "保存", Modifier.weight(1f), primary = true, enabled = problems.isEmpty() && !writing && (editing != null || names != null)) { save() }
         },
     ) {
-        Title(if (editing == null) "Create" else "Edit")
-        Field("Name") { Input(name, { name = it.filter { c -> c in 'a'..'z' || c in 'A'..'Z' || c in '0'..'9' || c in " ._-" }.take(64) }, Modifier.fillMaxWidth(), placeholder = "pixel-8", enabled = editing == null) }
+        Title(if (editing == null) "新建" else "编辑")
+        Field("名称") { Input(name, { name = it.filter { c -> c in 'a'..'z' || c in 'A'..'Z' || c in '0'..'9' || c in " ._-" }.take(64) }, Modifier.fillMaxWidth(), placeholder = "pixel-8", enabled = editing == null) }
         problems["name"]?.takeIf { name.isNotEmpty() }?.let { Warn(it) }
-        Field("Product") { Input(product, { product = usbText(it) }, Modifier.fillMaxWidth(), placeholder = "USB Arsenal") }
+        Field("产品") { Input(product, { product = usbText(it) }, Modifier.fillMaxWidth(), placeholder = "USB Arsenal") }
         problems["product"]?.takeIf { product.isNotEmpty() }?.let { Warn(it) }
-        Field("Maker") { Input(maker, { maker = usbText(it) }, Modifier.fillMaxWidth(), placeholder = "USB Arsenal") }
+        Field("厂商") { Input(maker, { maker = usbText(it) }, Modifier.fillMaxWidth(), placeholder = "USB Arsenal") }
         problems["maker"]?.takeIf { maker.isNotEmpty() }?.let { Warn(it) }
         // Left empty, the host sees the phone's own serial
-        Field("Serial") { Input(serial, { serial = usbText(it) }, Modifier.fillMaxWidth(), placeholder = "from this phone") }
+        Field("序列号") { Input(serial, { serial = usbText(it) }, Modifier.fillMaxWidth(), placeholder = "本机") }
         problems["serial"]?.let { Warn(it) }
-        Field("USB IDs") {
+        Field("USB ID") {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Input(vid, { vid = hexInput(it) }, Modifier.width(96.dp), placeholder = "1d6b", keyboard = ids)
                 Text(":", LcdType.data)
@@ -334,9 +334,9 @@ private fun ProfileSheet(open: Boolean, profile: Profile?, dir: String, names: L
         }
         problems["ids"]?.let { Warn(it) }
         // The unit in VT323 beside the segments: Silkscreen would print it as MA
-        Field("Power") {
+        Field("功率") {
             Row(horizontalArrangement = Arrangement.spacedBy(Lcd.tight), verticalAlignment = Alignment.CenterVertically) {
-                Segs(POWERS.map { "$it" }, POWERS.indexOf(power), { power = POWERS[it] }, Modifier.weight(1f), spoken = { "${POWERS[it]} milliamps" })
+                Segs(POWERS.map { "$it" }, POWERS.indexOf(power), { power = POWERS[it] }, Modifier.weight(1f), spoken = { "${POWERS[it]} 毫安" })
                 Text("mA", LcdType.data)
             }
         }

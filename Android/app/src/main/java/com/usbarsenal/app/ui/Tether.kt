@@ -118,7 +118,7 @@ fun TetherScreen(back: () -> Unit, openLog: () -> Unit) {
     Box(Modifier.fillMaxSize()) {
         Screen {
             Top { BackKey() }
-            Title("Tether")
+            Title("共享网络")
             fault?.let { Fault(it.message, onLog = openLog, modifier = Modifier.shake(shake).opener("tether/fault")) }
             Column(verticalArrangement = Arrangement.spacedBy(Lcd.section)) {
                 Segs(
@@ -129,24 +129,24 @@ fun TetherScreen(back: () -> Unit, openLog: () -> Unit) {
                     enabled = { if (it == 0) caps.ncmOk() else caps.rndisOk() },
                 )
                 Column {
-                    Node("Host")
+                    Node("主机")
                     Wire(function, moving = on)
-                    Node("Phone", live?.iface ?: "off", inverted = true)
+                    Node("手机", live?.iface ?: "关", inverted = true)
                     Wire(
                         when {
-                            gatewayLive -> "virtual cable"
-                            live != null && !live.running -> "no network side"
-                            else -> "masquerade"
+                            gatewayLive -> "虚拟链路"
+                            live != null && !live.running -> "无网络侧"
+                            else -> "地址伪装"
                         },
                         up = true,
                         moving = on,
                     )
                     // Values are live only: off, the rows below already say what a start would use
                     if (gatewayLive) {
-                        val name = live?.gatewayContainer?.ifEmpty { null } ?: plan.container.ifEmpty { "Container" }
-                        Node(name, if (live?.gatewayWaiting == true) "waiting" else live?.gatewayIface)
+                        val name = live?.gatewayContainer?.ifEmpty { null } ?: plan.container.ifEmpty { "容器" }
+                        Node(name, if (live?.gatewayWaiting == true) "等待中" else live?.gatewayIface)
                     } else {
-                        Node("Upstream", live?.upstream?.ifEmpty { null })
+                        Node("上行", live?.upstream?.ifEmpty { null })
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(Lcd.tight)) {
@@ -155,40 +155,40 @@ fun TetherScreen(back: () -> Unit, openLog: () -> Unit) {
                 }
                 // What the next start brings up
                 Column {
-                    Group("Configure")
+                    Group("配置")
                     // A gateway is a container: switching it on picks one, off forgets it. Without
                     // Droidspaces there is no container to hand the link to, so the switch is held
-                    Kv("Gateway") {
-                        if (ds?.installed == false) Text("no droidspaces", LcdType.data)
-                        Dip(plan.gateway, { if (it) choosing = true else set(plan.copy(container = "")) }, "Gateway mode", enabled = ds?.installed != false)
+                    Kv("网关") {
+                        if (ds?.installed == false) Text("无 Droidspaces", LcdType.data)
+                        Dip(plan.gateway, { if (it) choosing = true else set(plan.copy(container = "")) }, "网关模式", enabled = ds?.installed != false)
                     }
                     if (plan.gateway) {
                         val stopped = containers != null && plan.container !in containers
-                        LinkRow("Container", if (stopped) "${plan.container} · not running" else plan.container, { choosing = true }, Modifier.opener("tether/container"))
-                        TypedRow("Its iface", plan.iface, "usb0", "an interface name, up to 15 characters", ::validIface, NAME_KEYS, ::ifaceInput) {
+                        LinkRow("容器", if (stopped) "${plan.container} · 未运行" else plan.container, { choosing = true }, Modifier.opener("tether/container"))
+                        TypedRow("接口名", plan.iface, "usb0", "接口名，最多 15 字符", ::validIface, NAME_KEYS, ::ifaceInput) {
                             set(plan.copy(iface = it))
                         }
-                        Kv("Host IPv4") { Text("by the container", LcdType.data) }
+                        Kv("主机 IPv4") { Text("由容器决定", LcdType.data) }
                     } else {
                         // Without NAT in the kernel only --no-net can start
-                        Kv("DHCP and NAT") {
-                            if (!caps.natOk()) Text("no nat in this kernel", LcdType.data)
-                            Dip(plan.net && caps.natOk(), { set(plan.copy(net = it)) }, "DHCP and NAT", enabled = caps.natOk())
+                        Kv("DHCP 和 NAT") {
+                            if (!caps.natOk()) Text("内核无 NAT", LcdType.data)
+                            Dip(plan.net && caps.natOk(), { set(plan.copy(net = it)) }, "DHCP 和 NAT", enabled = caps.natOk())
                         }
                         if (plan.net) {
                             TypedRow(
-                                "Address", plan.address, profile["tether_address"] ?: DEFAULT_ADDRESS,
-                                "a host address with a /8 to /30 prefix", ::validAddress, ADDRESS_KEYS,
+                                "地址", plan.address, profile["tether_address"] ?: DEFAULT_ADDRESS,
+                                "主机地址，前缀 /8 至 /30", ::validAddress, ADDRESS_KEYS,
                                 { it.filter { c -> c.isDigit() || c in "./" }.take(18) },
                             ) { set(plan.copy(address = it)) }
-                            Kv("Host IPv4") { Text(hostOf(address.trim()) ?: "-", LcdType.data) }
-                            Kv("Host IPv6") { Text(live?.ipv6?.ifEmpty { null } ?: "-", LcdType.data) }
+                            Kv("主机 IPv4") { Text(hostOf(address.trim()) ?: "-", LcdType.data) }
+                            Kv("主机 IPv6") { Text(live?.ipv6?.ifEmpty { null } ?: "-", LcdType.data) }
                             TypedRow(
                                 "DNS", plan.dns, profile["tether_dns"]?.replace(",", ", ") ?: "1.1.1.1, 8.8.8.8",
-                                "IPv4 addresses, comma-separated, 127 characters at most", ::validDns, ADDRESS_KEYS,
+                                "IPv4 地址，逗号分隔，最多 127 字符", ::validDns, ADDRESS_KEYS,
                                 { it.filter { c -> c.isDigit() || c in ".," }.take(127) },
                             ) { set(plan.copy(dns = it)) }
-                            LinkRow("Upstream", plan.upstream.ifBlank { auto }, { pickingUp = true }, Modifier.opener("tether/upstream"))
+                            LinkRow("上行", plan.upstream.ifBlank { auto }, { pickingUp = true }, Modifier.opener("tether/upstream"))
                         }
                     }
                 }
@@ -196,8 +196,8 @@ fun TetherScreen(back: () -> Unit, openLog: () -> Unit) {
         }
         UnappliedSheet(Fn.TETHER, back)
         ChoiceSheet(
-            choosing, "Container", containers.orEmpty(), plan.container,
-            if (ds == null) "Reading Droidspaces' containers" else if (containers == null) "Cannot read Droidspaces' containers" else "No containers are running",
+            choosing, "容器", containers.orEmpty(), plan.container,
+            if (ds == null) "正在读取 Droidspaces 容器" else if (containers == null) "无法读取 Droidspaces 容器" else "没有运行中的容器",
             onPick = {
                 set(plan.copy(container = it))
                 choosing = false
@@ -206,7 +206,7 @@ fun TetherScreen(back: () -> Unit, openLog: () -> Unit) {
         )
         // What is set stays listed while it is down, or when the command line set it
         ChoiceSheet(
-            pickingUp, "Upstream", (listOf(auto) + listOfNotNull(plan.upstream.ifBlank { null }) + uplinks).distinct(), plan.upstream.ifBlank { auto }, "",
+            pickingUp, "上行", (listOf(auto) + listOfNotNull(plan.upstream.ifBlank { null }) + uplinks).distinct(), plan.upstream.ifBlank { auto }, "",
             onPick = {
                 set(plan.copy(upstream = if (it == auto) "" else it))
                 pickingUp = false

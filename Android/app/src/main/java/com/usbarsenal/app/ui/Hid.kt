@@ -33,9 +33,9 @@ fun HidScreen(back: () -> Unit, openKeys: () -> Unit, openQuacky: () -> Unit) {
     Box(Modifier.fillMaxSize()) {
         Screen {
             Top { BackKey() }
-            Title("HID")
-            Card("Keyboard and mouse", nodes.joinToString(" · ").ifEmpty { "a trackpad and keys" }, Sprites.Hid, openKeys, Modifier.focusRequester(focusOn()).opener("hid/keys"))
-            Card("Quacky", "a script that types", Sprites.Duck, openQuacky, Modifier.opener("hid/quacky"))
+            Title("键鼠")
+            Card("键盘与鼠标", nodes.joinToString(" · ").ifEmpty { "触控板与按键" }, Sprites.Hid, openKeys, Modifier.focusRequester(focusOn()).opener("hid/keys"))
+            Card("Quacky", "会打字的脚本", Sprites.Duck, openQuacky, Modifier.opener("hid/quacky"))
             Row(Modifier.fillMaxWidth().heightIn(min = Lcd.touch), horizontalArrangement = Arrangement.spacedBy(Lcd.tight), verticalAlignment = Alignment.CenterVertically) {
                 // On a kernel without the f_hid control the host gets the stock period whatever is
                 // set: 1 ms at high speed, 10 ms on a USB 1.1 host. One line either way, so the row
@@ -43,13 +43,13 @@ fun HidScreen(back: () -> Unit, openKeys: () -> Unit, openQuacky: () -> Unit) {
                 val fixed = HidSetup.fixed
                 val fullSpeed = Gadget.status?.speed == "full-speed"
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Lcd.lines)) {
-                    Text("Interval", LcdType.labelStrong)
-                    Marquee(if (fixed) "${if (fullSpeed) 10 else 1} ms, fixed by this kernel" else periodText(interval, fullSpeed), LcdType.data, Modifier.fillMaxWidth())
+                    Text("间隔", LcdType.labelStrong)
+                    Marquee(if (fixed) "${if (fullSpeed) 10 else 1} ms，由内核固定" else periodText(interval, fullSpeed), LcdType.data, Modifier.fillMaxWidth())
                 }
                 // Lower is faster; the exponent stops at 16, where a USB interrupt endpoint does
-                Key("-", Modifier.width(44.dp).semantics { contentDescription = "Shorter interval" }, padding = 0.dp, enabled = !fixed && interval > 1) { HidSetup.set(interval - 1) }
+                Key("-", Modifier.width(44.dp).semantics { contentDescription = "缩短间隔" }, padding = 0.dp, enabled = !fixed && interval > 1) { HidSetup.set(interval - 1) }
                 Text("%02d".format(java.util.Locale.ROOT, if (fixed) DEFAULT_INTERVAL else interval), LcdType.data)
-                Key("+", Modifier.width(44.dp).semantics { contentDescription = "Longer interval" }, padding = 0.dp, enabled = !fixed && interval < 16) { HidSetup.set(interval + 1) }
+                Key("+", Modifier.width(44.dp).semantics { contentDescription = "加长间隔" }, padding = 0.dp, enabled = !fixed && interval < 16) { HidSetup.set(interval + 1) }
             }
         }
         UnappliedSheet(Fn.HID, back)

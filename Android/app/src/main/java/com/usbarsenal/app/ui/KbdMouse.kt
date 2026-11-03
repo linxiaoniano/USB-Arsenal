@@ -363,7 +363,7 @@ fun KbdMouseScreen(back: () -> Unit) {
                 trackpad(Modifier.weight(1f).systemGestureExclusion(), null)
                 Row(horizontalArrangement = Arrangement.spacedBy(Lcd.tight), verticalAlignment = Alignment.CenterVertically) {
                     Key(
-                        "Leave full screen",
+                        "退出全屏",
                         Modifier.width(56.dp),
                         icon = Sprites.Collapse,
                         padding = 0.dp,
@@ -373,8 +373,8 @@ fun KbdMouseScreen(back: () -> Unit) {
             }
         } else Screen(scroll = tab == 0 && short) {
             Top { BackKey() }
-            Title("Keys + mouse")
-            Segs(listOf("Mouse", "Keys"), tab, { tab = it })
+            Title("键鼠")
+            Segs(listOf("鼠标", "键盘"), tab, { tab = it })
             if (tab == 0) {
                 BoxWithConstraints(Modifier.fillMaxWidth()) {
                     // The pad takes what L M R, the rule, Speed and Natural scroll leave, up to the
@@ -390,10 +390,10 @@ fun KbdMouseScreen(back: () -> Unit) {
                         trackpad(Modifier.height(padHeight), if (on) ({ wantFull = true }) else null)
                         MouseButtons(dragBit or flashBit) { bit, down -> click(bit, down) }
                         Column(verticalArrangement = Arrangement.spacedBy(Lcd.section)) {
-                            Group("Configure")
+                            Group("调节")
                             val speed = HidSetup.speed
-                            Slider("Speed", speed, 1..16, if (speed % 4 == 0) "${speed / 4}.0x" else "${speed / 4f}x", { HidSetup.speed(it) })
-                            Kv("Natural scroll") { Dip(HidSetup.natural, { HidSetup.natural(it) }, "Natural scroll") }
+                            Slider("速度", speed, 1..16, if (speed % 4 == 0) "${speed / 4}.0x" else "${speed / 4f}x", { HidSetup.speed(it) })
+                            Kv("自然滚动") { Dip(HidSetup.natural, { HidSetup.natural(it) }, "自然滚动") }
                         }
                     }
                 }
@@ -498,7 +498,7 @@ private fun Trackpad(
             }
             if (onFull != null) {
                 Key(
-                    "Full screen",
+                    "全屏",
                     Modifier.padding(6.dp).size(Lcd.touch),
                     icon = Sprites.Expand,
                     padding = 0.dp,
@@ -617,7 +617,7 @@ private fun KeysTab(text: String, onText: (String) -> Unit, mods: Int, onMod: (I
             KeyGrid(TABLE, mods, onMod, onKey)
             KeyGrid(listOf(listOf("", "UP", ""), listOf("LEFT", "DOWN", "RIGHT")), mods, onMod, onKey)
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Type", LcdType.labelStrong, Modifier.height(TYPE_LABEL.dp))
+                Text("输入", LcdType.labelStrong, Modifier.height(TYPE_LABEL.dp))
                 Input(
                     text,
                     { input ->
@@ -681,4 +681,4 @@ private fun KeyGrid(rows: List<List<String>>, mods: Int, onMod: (Int) -> Unit, o
 
 // HID off: the page shaded, Pin asking for HID first, or saying this kernel has none, as Home's row does
 @Composable
-private fun HidOff(kernelHas: Boolean) = Shade(if (kernelHas) "Enable HID on Home\nto use this page" else "No HID in\nthis kernel") { Pin(3.dp) }
+private fun HidOff(kernelHas: Boolean) = Shade(if (kernelHas) "请先在主页开启 HID\n才能使用此页" else "此内核不支持\nHID") { Pin(3.dp) }

@@ -29,7 +29,7 @@ class AuditTest {
     fun emptyDrivesAreStillOn() {
         val s = GadgetStatus("1.2.0", "udc", "configured", bound = true, storage = listOf(Lun(0, "", "", "")), hid = emptyList(), tether = null)
         assertTrue(s.isOn(Fn.STORAGE))
-        assertEquals("1 empty drive" to "no medium", rowLines(Fn.STORAGE, s, null, null))
+        assertEquals("1 个空驱动器" to "无介质", rowLines(Fn.STORAGE, s, null, null))
     }
 
     // Pending comes from the backend's two files, through status, not from a record the app kept

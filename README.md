@@ -5,6 +5,8 @@
 
 # USB Arsenal
 
+[简体中文](README.zh.md) | English
+
 USB Arsenal turns a rooted Android phone into several USB devices at once, over the one
 cable: a USB drive or CD-ROM holding any image, a network adapter that shares the phone's
 internet, and a keyboard and mouse that the phone drives.

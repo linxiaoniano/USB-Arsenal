@@ -102,56 +102,56 @@ fun SettingsScreen(back: () -> Unit, openIdentity: () -> Unit, openFonts: () -> 
     Box(Modifier.fillMaxSize()) {
         Screen {
             Top { BackKey() }
-            Title("Settings")
+            Title("设置")
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Group("Identity")
-                LinkRow("Profile", profileName(Gadget.profile), openIdentity, Modifier.opener("settings/identity").focusRequester(focusOn()))
+                Group("身份")
+                LinkRow("配置档", profileName(Gadget.profile), openIdentity, Modifier.opener("settings/identity").focusRequester(focusOn()))
 
                 // Every command names it. The backend keeps the controller it holds while bound,
                 // so a change waits until nothing is
                 if (udcs.size > 1) {
                     Section("USB")
                     val bound = Gadget.status?.bound == true
-                    LinkRow("Controller", Controller.picked ?: "none", if (bound) null else ({ choosingUdc = true }), Modifier.opener("settings/controller"))
-                    if (bound) Note("stop all to change it")
+                    LinkRow("控制器", Controller.picked ?: "无", if (bound) null else ({ choosingUdc = true }), Modifier.opener("settings/controller"))
+                    if (bound) Note("全部停止后可更换")
                 }
 
-                Section("Backend")
+                Section("后端")
                 // The link lives in the module, so it is held until read, and without a backend
                 // installed: it would name a binary not there
-                Kv("System path", Modifier.shake(shake)) {
-                    Dip(linked == true, { on -> linking = true; scope.launch { write(setPathLinked(on)) { linked = on }; linking = false } }, "System path", held = linking || linked == null || !installed)
+                Kv("系统路径", Modifier.shake(shake)) {
+                    Dip(linked == true, { on -> linking = true; scope.launch { write(setPathLinked(on)) { linked = on }; linking = false } }, "系统路径", held = linking || linked == null || !installed)
                 }
                 // One line kept for its fault or its warning, so the sections below never move
                 Box(Modifier.heightIn(min = Lcd.touch)) {
                     val f = fault
                     when {
                         f != null -> Fault(f, onLog = null)
-                        changed -> Warn("applies from the next boot")
+                        changed -> Warn("下次启动生效")
                     }
                 }
-                Key("Requirements", Modifier.fillMaxWidth().padding(top = 6.dp).opener("settings/check"), onClick = openCheck)
-                Key("Reinstall", Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 10.dp).opener("settings/reinstall"), enabled = backend != null) {
+                Key("依赖检查", Modifier.fillMaxWidth().padding(top = 6.dp).opener("settings/check"), onClick = openCheck)
+                Key("重装", Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 10.dp).opener("settings/reinstall"), enabled = backend != null) {
                     backend?.let(fix)
                 }
 
-                Section("App")
-                Kv("Motion") { Dip(switches.motion, { switches.motion = it }, "Motion") }
-                Kv("Haptics") { Dip(switches.haptics, { switches.haptics = it }, "Haptics") }
-                LinkRow("Theme", switches.theme.label, { choosingTheme = true }, Modifier.opener("settings/theme"))
+                Section("应用")
+                Kv("动效") { Dip(switches.motion, { switches.motion = it }, "动效") }
+                Kv("触感") { Dip(switches.haptics, { switches.haptics = it }, "触感") }
+                LinkRow("主题", switches.theme.label, { choosingTheme = true }, Modifier.opener("settings/theme"))
 
-                Section("Credits")
-                LinkRow("Fonts", "SIL OFL 1.1", openFonts, Modifier.opener("settings/fonts"))
+                Section("致谢")
+                LinkRow("字体", "SIL OFL 1.1", openFonts, Modifier.opener("settings/fonts"))
                 // The trackpad's gestures follow libinput's touchpad rules
-                LinkRow("Touchpad", "libinput, MIT", { context.open(LIBINPUT) }, Modifier.opener("settings/libinput"))
+                LinkRow("触摸板", "libinput, MIT", { context.open(LIBINPUT) }, Modifier.opener("settings/libinput"))
 
-                Section("About")
-                Kv("App", fact = true) { Text(BuildConfig.VERSION_NAME, LcdType.data) }
-                LinkRow("Source", SOURCE, { context.open("https://$SOURCE") })
+                Section("关于")
+                Kv("应用", fact = true) { Text(BuildConfig.VERSION_NAME, LcdType.data) }
+                LinkRow("来源", SOURCE, { context.open("https://$SOURCE") })
             }
         }
         ChoiceSheet(
-            choosingUdc, "Controller", udcs.map { it.name }, Controller.picked.orEmpty(), "No controllers",
+            choosingUdc, "控制器", udcs.map { it.name }, Controller.picked.orEmpty(), "无控制器",
             onPick = { name ->
                 choosingUdc = false
                 scope.launch {
@@ -170,13 +170,13 @@ fun SettingsScreen(back: () -> Unit, openIdentity: () -> Unit, openFonts: () -> 
         )
         // The pick cuts the whole screen over in one frame, as an LCD would
         ChoiceSheet(
-            choosingTheme, "Theme", Theme.entries.map { it.label }, switches.theme.label, "",
+            choosingTheme, "主题", Theme.entries.map { it.label }, switches.theme.label, "",
             onPick = { label ->
                 choosingTheme = false
                 switches.theme = Theme.entries.first { it.label == label }
             },
             onDismiss = { choosingTheme = false },
-            detail = { label -> if (Theme.entries.first { it.label == label }.lit) "lit" else "negative" },
+            detail = { label -> if (Theme.entries.first { it.label == label }.lit) "亮" else "反色" },
         )
     }
 }
@@ -186,7 +186,7 @@ private object BootLink {
     var linked: Boolean? = null
 }
 
-// The three faces' copyright lines, then the licence they share
+// Each face's copyright line, then the licence they share
 private fun licence(context: Context): List<String> {
     val files = context.assets.list("licenses").orEmpty().sorted()
     val texts = files.map { f -> context.assets.open("licenses/$f").bufferedReader().readLines() }
@@ -201,13 +201,13 @@ private fun licence(context: Context): List<String> {
 fun FontsScreen(back: () -> Unit) {
     BackHandler(onBack = back)
     val context = LocalContext.current
-    // Off the main thread: three asset files are a read, not a frame's work
+    // Off the main thread: a few asset files are a read, not a frame's work
     val text by produceState(emptyList<String>()) { value = withContext(Dispatchers.IO) { licence(context) } }
     Screen {
         Top { BackKey(Modifier.focusRequester(focusOn())) }
-        Title("Fonts")
+        Title("字体")
         Column {
-            for (face in listOf("Jersey 10", "Silkscreen", "VT323")) Kv(face, fact = true) { Text("OFL 1.1", LcdType.data) }
+            for (face in listOf("Jersey 10", "Silkscreen", "VT323", "Ark Pixel")) Kv(face, fact = true) { Text("OFL 1.1", LcdType.data) }
         }
         Terminal(text, Modifier.fill(min = 240.dp), live = false)
     }

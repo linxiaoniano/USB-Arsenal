@@ -26,33 +26,33 @@ class GadgetTest {
     @Test
     fun liveLines() {
         assertEquals("LUN0 Win11.iso · dvd" to "", rowLines(Fn.STORAGE, live, caps(), null))
-        assertEquals("ncm 192.168.42.129 → .130" to "via rmnet_data0", rowLines(Fn.TETHER, live, caps(), null))
-        assertEquals("keyboard /dev/hidg1" to "mouse /dev/hidg2", rowLines(Fn.HID, live, caps(), null))
+        assertEquals("ncm 192.168.42.129 → .130" to "经 rmnet_data0", rowLines(Fn.TETHER, live, caps(), null))
+        assertEquals("键盘 /dev/hidg1" to "鼠标 /dev/hidg2", rowLines(Fn.HID, live, caps(), null))
     }
 
     @Test
     fun offBusyAndMissing() {
         val idle = live.copy(bound = false, storage = emptyList(), hid = emptyList(), tether = null)
         // Off, a row says what the function does: its switch already says off
-        assertEquals("ISOs and disk images" to "as drives for the host", rowLines(Fn.STORAGE, idle, caps(), null))
-        assertEquals("this phone's internet" to "for the host, over USB", rowLines(Fn.TETHER, idle, caps(), null))
-        assertEquals("a keyboard and a mouse" to "for the host", rowLines(Fn.HID, idle, caps(), null))
-        assertEquals("starting" to "hid start", rowLines(Fn.HID, idle, caps(), Busy(Fn.HID, "hid start", stopping = false)))
+        assertEquals("ISO 与磁盘镜像" to "作为主机的驱动器", rowLines(Fn.STORAGE, idle, caps(), null))
+        assertEquals("本机网络" to "经 USB 共享给主机", rowLines(Fn.TETHER, idle, caps(), null))
+        assertEquals("键盘与鼠标" to "给主机", rowLines(Fn.HID, idle, caps(), null))
+        assertEquals("启动中" to "hid start", rowLines(Fn.HID, idle, caps(), Busy(Fn.HID, "hid start", stopping = false)))
         // A path that ends in "stop" is still a start
-        assertEquals("starting", rowLines(Fn.STORAGE, idle, caps(), Busy(Fn.STORAGE, "storage start /sdcard/backstop", stopping = false)).first)
-        assertEquals("no hid in this kernel" to "CONFIG_USB_CONFIGFS_F_HID", rowLines(Fn.HID, idle, caps(Probe.MISSING), null))
+        assertEquals("启动中", rowLines(Fn.STORAGE, idle, caps(), Busy(Fn.STORAGE, "storage start /sdcard/backstop", stopping = false)).first)
+        assertEquals("内核无 hid" to "CONFIG_USB_CONFIGFS_F_HID", rowLines(Fn.HID, idle, caps(Probe.MISSING), null))
     }
 
     // The bottom bar's few words for a command, never read from a path
     @Test
     fun saysWhatItDoes() {
-        assertEquals("starting HID", says(listOf("hid", "start", "--interval", "1")))
-        assertEquals("starting storage", says(listOf("storage", "start", "--lun", "0", "--mode", "rw", "/sdcard/backstop")))
-        assertEquals("stopping tether", says(listOf("tether", "stop")))
-        assertEquals("stopping everything", says(listOf("stop")))
-        assertEquals("ejecting a drive", says(listOf("storage", "eject", "--lun", "1")))
-        assertEquals("switching identity", says(listOf("identity", "set", "/sdcard/USB-Arsenal/Profiles/a.conf")))
-        assertEquals("back to built-in identity", says(listOf("identity", "unset")))
+        assertEquals("正在启动 HID", says(listOf("hid", "start", "--interval", "1")))
+        assertEquals("正在启动 storage", says(listOf("storage", "start", "--lun", "0", "--mode", "rw", "/sdcard/backstop")))
+        assertEquals("正在停止 tether", says(listOf("tether", "stop")))
+        assertEquals("正在全部停止", says(listOf("stop")))
+        assertEquals("正在弹出驱动器", says(listOf("storage", "eject", "--lun", "1")))
+        assertEquals("正在切换身份", says(listOf("identity", "set", "/sdcard/USB-Arsenal/Profiles/a.conf")))
+        assertEquals("恢复内置身份", says(listOf("identity", "unset")))
     }
 
     // The host gets the next address, or the one before at the top of the subnet; none without one
@@ -68,7 +68,7 @@ class GadgetTest {
         assertEquals(null, hostOf("10.42.0.01/24"))
         assertEquals(null, hostOf("10.42.0.1/31"))
         val gateway = live.copy(tether = live.tether!!.copy(address = "", gateway = true, gatewayContainer = "OpenWrt"))
-        assertEquals("ncm usb0" to "gateway OpenWrt", rowLines(Fn.TETHER, gateway, caps(), null))
+        assertEquals("ncm usb0" to "网关 OpenWrt", rowLines(Fn.TETHER, gateway, caps(), null))
     }
 
     // Tether's setup is the setup's keys and back, and a setup the backend would refuse cannot start

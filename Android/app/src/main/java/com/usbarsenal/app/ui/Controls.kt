@@ -234,7 +234,7 @@ fun nextEnabled(from: Int, d: Int, steps: Int, enabled: (Int) -> Boolean): Int? 
 @Composable
 fun LunStrip(count: Int, selected: Int, onSelect: (Int) -> Unit, onAdd: () -> Unit, modifier: Modifier = Modifier) {
     val options = List(count) { "$it" } + if (count < 8) listOf("+") else emptyList()
-    Segs(options, selected, { if (it == count) onAdd() else onSelect(it) }, modifier, cell = Lcd.lunCell, steps = count, spoken = { if (it == count) "Add a LUN" else "LUN $it" })
+    Segs(options, selected, { if (it == count) onAdd() else onSelect(it) }, modifier, cell = Lcd.lunCell, steps = count, spoken = { if (it == count) "添加 LUN" else "LUN $it" })
 }
 
 /*
@@ -785,12 +785,12 @@ fun BottomBar(port: Port, onStopAll: () -> Unit, modifier: Modifier, binds: Int,
             PinStage(port, failing, binds)
             Redraw(row, back = false, modifier = Modifier.fillMaxWidth(), frames = 2) { shown ->
                 val (word, detail) = when (shown) {
-                    is Port.Bound -> "Bound" to shown.udc
-                    is Port.Replugging -> "Replugging" to shown.command
-                    is Port.Stopping -> "Stopping" to shown.command
-                    Failed -> "Failed" to ""
-                    is Port.Android -> "Port with Android" to shown.detail
-                    else -> "Port with Android" to ""
+                    is Port.Bound -> "已占用" to shown.udc
+                    is Port.Replugging -> "重新插入" to shown.command
+                    is Port.Stopping -> "停止中" to shown.command
+                    Failed -> "失败" to ""
+                    is Port.Android -> "安卓占用" to shown.detail
+                    else -> "安卓占用" to ""
                 }
                 Row(
                     Modifier.fillMaxWidth().heightIn(min = Lcd.touch + 4.dp).background(LocalLcd.current.ground),
@@ -803,7 +803,7 @@ fun BottomBar(port: Port, onStopAll: () -> Unit, modifier: Modifier, binds: Int,
                         Marquee(detail, LcdType.data, Modifier.fillMaxWidth())
                     }
                     // Live whenever the gadget really is bound, Failed showing or not
-                    Key("Stop all", Modifier.widthIn(min = 140.dp), enabled = port is Port.Bound, haptic = { gestureEnd() }, onClick = onStopAll)
+                    Key("全部停止", Modifier.widthIn(min = 140.dp), enabled = port is Port.Bound, haptic = { gestureEnd() }, onClick = onStopAll)
                 }
             }
         }
@@ -987,5 +987,5 @@ fun Modifier.shake(shake: Shake): Modifier = composed {
 fun Fault(message: String, onLog: (() -> Unit)?, modifier: Modifier = Modifier) = InvertedKey(onLog, modifier, Alignment.Top) {
     Text(message, LcdType.data, Modifier.weight(1f), maxLines = 3)
     // The tag says where it leads; a fault with nothing to open does not promise it
-    if (onLog != null) Inverted { Text("Log", LcdType.labelStrong, Modifier.background(LocalLcd.current.ground).padding(horizontal = 6.dp)) }
+    if (onLog != null) Inverted { Text("日志", LcdType.labelStrong, Modifier.background(LocalLcd.current.ground).padding(horizontal = 6.dp)) }
 }

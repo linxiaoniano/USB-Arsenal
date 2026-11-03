@@ -29,16 +29,16 @@ private fun attention(b: Backend): Pair<String, String>? = when (b.state) {
     BackendState.READY -> null
     // The same version rebuilt is still an update, but "1.2.0 → 1.2.0" would read as nothing
     BackendState.UPDATE_AVAILABLE ->
-        "Backend update" to (b.installed?.takeIf { it != BuildConfig.VERSION_NAME }?.let { "$it → ${BuildConfig.VERSION_NAME}" } ?: "update")
-    BackendState.NOT_INSTALLED -> "Not installed" to "install"
-    BackendState.MODULE_MISSING -> "Module missing" to "reinstall"
-    BackendState.CORRUPTED -> "Backend broken" to "reinstall"
+        "后端更新" to (b.installed?.takeIf { it != BuildConfig.VERSION_NAME }?.let { "$it → ${BuildConfig.VERSION_NAME}" } ?: "更新")
+    BackendState.NOT_INSTALLED -> "未安装" to "安装"
+    BackendState.MODULE_MISSING -> "模块缺失" to "重装"
+    BackendState.CORRUPTED -> "后端损坏" to "重装"
     // The shade over every screen says it
     BackendState.NO_ROOT -> null
 }
 
 // The bar's detail once status has not answered for a while; the rows keep the last answer
-const val NO_ANSWER = "no answer from usb-arsenal"
+const val NO_ANSWER = "usb-arsenal 无响应"
 
 /*
  * Home is the gadget: each function a row with its live facts and its switch, which starts it
@@ -85,7 +85,7 @@ fun HomeScreen(open: (Fn) -> Unit, openLog: () -> Unit, openSettings: () -> Unit
             }
             Text("v${BuildConfig.VERSION_NAME}", LcdType.data)
         }
-        Text(if (up == 0) "idle" else "$up up", LcdType.hero)
+        Text(if (up == 0) "空闲" else "$up 已启动", LcdType.hero)
         val ink = LocalLcd.current.ink
         Column(Modifier.bleed(10.dp)) {
             Fn.entries.forEachIndexed { i, fn ->
@@ -122,8 +122,8 @@ fun HomeScreen(open: (Fn) -> Unit, openLog: () -> Unit, openSettings: () -> Unit
         // Under the rows, as the board has them; a short window scrolls to them
         needs?.let { b -> attention(b)?.let { (label, fixLabel) -> Alert(label, fixLabel, onClick = { fix(b) }, Modifier.opener("home/fix")) } }
         KeyRow {
-            Key("Log", Modifier.weight(1f).opener("home/log"), onClick = openLog)
-            Key("Settings", Modifier.weight(1f).opener("home/settings"), onClick = openSettings)
+            Key("日志", Modifier.weight(1f).opener("home/log"), onClick = openLog)
+            Key("设置", Modifier.weight(1f).opener("home/settings"), onClick = openSettings)
         }
         if (fault != null) Fault(fault.message, onLog = openLog, modifier = Modifier.opener("home/fault"))
     }

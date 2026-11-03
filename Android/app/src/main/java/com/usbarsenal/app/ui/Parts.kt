@@ -482,7 +482,7 @@ fun Key(
 @Composable
 fun BackKey(modifier: Modifier = Modifier, enabled: Boolean = true) {
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
-    Key("< Back", modifier.semantics { contentDescription = "Back" }, enabled = enabled) { dispatcher?.onBackPressed() }
+    Key("< 返回", modifier.semantics { contentDescription = "返回" }, enabled = enabled) { dispatcher?.onBackPressed() }
 }
 
 // .top: 44dp, even when empty, so titles line up from screen to screen
@@ -503,7 +503,7 @@ fun Steps(at: Int, of: Int, joins: Boolean = false) {
     // The count this row first drew; with [joins], a dot past it has just joined
     val first = remember { if (joins) of else Int.MAX_VALUE }
     Row(
-        Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = "Step $at of $of" },
+        Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = "第 $at 步，共 $of 步" },
         horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
